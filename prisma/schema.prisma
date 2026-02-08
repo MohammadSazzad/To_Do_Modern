@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model labels {
+  id         String       @id @db.Uuid
+  user_id    String       @db.Uuid
+  name       String       @db.VarChar(100)
+  users      users        @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_labels_user")
+  tasklabels tasklabels[]
+}
+
+model projects {
+  id           String    @id @db.Uuid
+  user_id      String    @db.Uuid
+  project_name String    @db.VarChar(100)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  users        users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_projects_user")
+  tasks        tasks[]
+}
+
+model reminders {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  task_id    String    @db.Uuid
+  remind_at  DateTime  @db.Timestamptz(6)
+  is_sent    Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  tasks      tasks     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_reminders_task")
+}
+
+model subtasks {
+  id         String    @id @db.Uuid
+  task_id    String    @db.Uuid
+  title      String    @db.VarChar(100)
+  is_done    Boolean?  @default(false)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  tasks      tasks     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_subtasks_task")
+}
+
+model tasklabels {
+  task_id  String @db.Uuid
+  label_id String @db.Uuid
+  labels   labels @relation(fields: [label_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasklabels_label")
+  tasks    tasks  @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasklabels_task")
+
+  @@id([task_id, label_id], map: "pk_tasklabels")
+}
+
+model tasks {
+  id           String         @id @db.Uuid
+  user_id      String         @db.Uuid
+  project_id   String         @db.Uuid
+  title        String         @db.VarChar(100)
+  description  String?
+  status       task_status?   @default(todo)
+  priority     task_priority? @default(medium)
+  due_date     DateTime?      @db.Date
+  completed_at DateTime?      @db.Timestamptz(6)
+  position     Int?
+  created_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?      @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime?      @db.Timestamptz(6)
+  reminders    reminders[]
+  subtasks     subtasks[]
+  tasklabels   tasklabels[]
+  projects     projects       @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_project")
+  users        users          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_user")
+}
+
+model tempusers {
+  id         String    @id @db.Uuid
+  first_name String    @db.VarChar(100)
+  last_name  String    @db.VarChar(100)
+  email      String    @unique @db.VarChar(255)
+  dob        DateTime? @db.Date
+  address    String?
+  created_at DateTime? @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+model users {
+  id          String     @id @db.Uuid
+  first_name  String     @db.VarChar(100)
+  last_name   String     @db.VarChar(100)
+  email       String     @unique @db.VarChar(255)
+  dob         DateTime?  @db.Date
+  address     String?
+  verified    Boolean?   @default(false)
+  verified_at DateTime?  @db.Timestamptz(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  labels      labels[]
+  projects    projects[]
+  tasks       tasks[]
+}
+
+enum task_priority {
+  low
+  medium
+  high
+}
+
+enum task_status {
+  todo
+  in_progress
+  done
+}
