@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -80,6 +79,7 @@ model tempusers {
   email      String    @unique @db.VarChar(255)
   dob        DateTime? @db.Date
   address    String?
+  password   String
   created_at DateTime? @db.Timestamptz(6)
   updated_at DateTime? @default(now()) @db.Timestamptz(6)
 }
@@ -91,6 +91,7 @@ model users {
   email       String     @unique @db.VarChar(255)
   dob         DateTime?  @db.Date
   address     String?
+  password    String
   verified    Boolean?   @default(false)
   verified_at DateTime?  @db.Timestamptz(6)
   updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
