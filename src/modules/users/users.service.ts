@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
   async create(createUserDto: CreateUserDto) {
-    const existingUser = await this.prisma.tempusers.findUnique({
+    const existingUser = await this.prisma.users.findUnique({
       where: { email: createUserDto.email },
     });
     if (existingUser) {
@@ -16,20 +16,25 @@ export class UsersService {
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const newUser = await this.prisma.tempusers.create({
+    const GenOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const newUser = await this.prisma.users.create({
       data: {
         id: randomUUID(),
-        first_name: createUserDto.first_name || '',
-        last_name: createUserDto.last_name || '',
-        email: createUserDto.email,
+        first_name: createUserDto.first_name!,
+        last_name: createUserDto.last_name!,
+        email: createUserDto.email!,
+        phone: createUserDto.phone!,
         dob: createUserDto.dob,
         address: createUserDto.address,
+        verified: false,
         password: hashedPassword,
+        otp: GenOtp,
+        otpExpiry: new Date(Date.now() + 5 * 60 * 1000), // OTP expires in 5 minutes
         created_at: new Date(),
         updated_at: new Date(),
       },
     });
-    const { password, ...userWithoutPassword } = newUser;
+    const { password: _, ...userWithoutPassword } = newUser;
     return userWithoutPassword;
   }
 }

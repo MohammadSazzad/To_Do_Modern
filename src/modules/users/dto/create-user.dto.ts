@@ -13,6 +13,9 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
+  @IsString()
+  phone: string;
+
   @Transform(({ value }) => {
     if (!value) return value;
     // Handle DD-MM-YYYY format
@@ -30,4 +33,8 @@ export class CreateUserDto {
 
   @IsString()
   password: string;
+
+  @IsOptional()
+  @IsString()
+  otp?: string;
 }
