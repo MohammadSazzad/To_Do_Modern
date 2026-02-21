@@ -3,10 +3,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/config/database.config';
 import { randomUUID } from 'crypto';
+import { MailService } from 'src/common/mail/mail.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly mailService: MailService,
+  ) {}
   async create(createUserDto: CreateUserDto) {
     const existingUser = await this.prisma.users.findUnique({
       where: { email: createUserDto.email },
@@ -22,8 +26,8 @@ export class UsersService {
         id: randomUUID(),
         first_name: createUserDto.first_name!,
         last_name: createUserDto.last_name!,
-        email: createUserDto.email!,
-        phone: createUserDto.phone!,
+        email: createUserDto.email,
+        phone: createUserDto.phone,
         dob: createUserDto.dob,
         address: createUserDto.address,
         verified: false,
@@ -34,7 +38,11 @@ export class UsersService {
         updated_at: new Date(),
       },
     });
-    const { password: _, ...userWithoutPassword } = newUser;
-    return userWithoutPassword;
+    await this.mailService.sendMail(createUserDto.email, GenOtp);
+    const { password, otp, otpExpiry, ...userWithoutPassword } = newUser;
+    return {
+      message: 'Verification email sent successfully',
+      user: userWithoutPassword,
+    };
   }
 }
