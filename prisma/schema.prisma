@@ -83,6 +83,7 @@ model users {
   password    String
   verified    Boolean?   @default(false)
   otp         String?
+  refreshHash String?
   otpExpiry   DateTime?
   verified_at DateTime?  @db.Timestamptz(6)
 

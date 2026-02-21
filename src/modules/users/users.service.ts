@@ -1,16 +1,18 @@
-import { Injectable, BadRequestException, Body } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/config/database.config';
 import { randomUUID } from 'crypto';
 import { MailService } from 'src/common/mail/mail.service';
 import { VerifyUserDto } from './dto/verify-user.dto';
+import { AuthService } from 'src/modules/auth/auth.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
+    private readonly authService: AuthService,
   ) {}
   async create(createUserDto: CreateUserDto) {
     const existingUser = await this.prisma.users.findUnique({
@@ -64,7 +66,7 @@ export class UsersService {
       throw new BadRequestException('OTP has expired');
     }
 
-    await this.prisma.users.update({
+    const verifiedUser = await this.prisma.users.update({
       where: { email: verifyUserDto.email },
       data: {
         verified: true,
@@ -74,6 +76,16 @@ export class UsersService {
       },
     });
 
-    return { message: 'User verified successfully' };
+    const authResult = await this.authService.issueTokensForUser({
+      id: verifiedUser.id,
+      email: verifiedUser.email,
+      first_name: verifiedUser.first_name,
+      last_name: verifiedUser.last_name,
+    });
+
+    return {
+      message: 'User verified successfully',
+      ...authResult,
+    };
   }
 }
