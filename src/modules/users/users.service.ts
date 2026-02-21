@@ -1,9 +1,10 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Body } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/config/database.config';
 import { randomUUID } from 'crypto';
 import { MailService } from 'src/common/mail/mail.service';
+import { VerifyUserDto } from './dto/verify-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -44,5 +45,35 @@ export class UsersService {
       message: 'Verification email sent successfully',
       user: userWithoutPassword,
     };
+  }
+
+  async verifyUser(verifyUserDto: VerifyUserDto) {
+    const user = await this.prisma.users.findUnique({
+      where: { email: verifyUserDto.email },
+    });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if (user.verified) {
+      throw new BadRequestException('User is already verified');
+    }
+    if (user.otp !== verifyUserDto.otp) {
+      throw new BadRequestException('Invalid OTP');
+    }
+    if (user.otpExpiry && user.otpExpiry < new Date()) {
+      throw new BadRequestException('OTP has expired');
+    }
+
+    await this.prisma.users.update({
+      where: { email: verifyUserDto.email },
+      data: {
+        verified: true,
+        verified_at: new Date(),
+        otp: null,
+        otpExpiry: null,
+      },
+    });
+
+    return { message: 'User verified successfully' };
   }
 }
