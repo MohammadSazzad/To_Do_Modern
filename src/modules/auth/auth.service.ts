@@ -7,6 +7,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { PrismaService } from 'src/config/database.config';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { resolveJwtExpiresIn } from './utils/token-expiry.util';
 
 @Injectable()
 export class AuthService {
@@ -18,8 +19,14 @@ export class AuthService {
   private async generateTokenPair(userId: string, email: string) {
     const accessSecret = process.env.ACCESS_TOKEN_SECRET;
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
-    const accessExpiresIn = Number(process.env.ACCESS_TOKEN_EXPIRES_IN);
-    const refreshExpiresIn = Number(process.env.REFRESH_TOKEN_EXPIRES_IN);
+    const accessExpiresIn = resolveJwtExpiresIn(
+      process.env.ACCESS_TOKEN_EXPIRES_IN,
+      '15m',
+    );
+    const refreshExpiresIn = resolveJwtExpiresIn(
+      process.env.REFRESH_TOKEN_EXPIRES_IN,
+      '7d',
+    );
 
     const payload = { sub: userId, email };
 

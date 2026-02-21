@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
+import { resolveJwtExpiresIn } from './utils/token-expiry.util';
 
 @Module({
   imports: [
@@ -12,7 +13,10 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
     JwtModule.register({
       secret: process.env.ACCESS_TOKEN_SECRET,
       signOptions: {
-        expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN),
+        expiresIn: resolveJwtExpiresIn(
+          process.env.ACCESS_TOKEN_EXPIRES_IN,
+          '15m',
+        ),
       },
     }),
   ],
