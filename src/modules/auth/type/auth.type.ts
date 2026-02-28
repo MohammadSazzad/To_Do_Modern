@@ -3,5 +3,6 @@ export type AuthenticatedRequest = Request & {
     sub: string;
     email: string;
     refreshToken?: string;
+    role: string;
   };
 };

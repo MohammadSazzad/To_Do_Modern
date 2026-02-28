@@ -81,6 +81,7 @@ model users {
   dob         DateTime?  @db.Date
   address     String?
   password    String
+  role        String
   verified    Boolean?   @default(false)
   otp         String?
   refreshHash String?

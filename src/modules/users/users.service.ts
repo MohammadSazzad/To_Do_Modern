@@ -33,6 +33,7 @@ export class UsersService {
         phone: createUserDto.phone,
         dob: createUserDto.dob,
         address: createUserDto.address,
+        role: 'user',
         verified: false,
         password: hashedPassword,
         otp: GenOtp,
@@ -81,6 +82,7 @@ export class UsersService {
       email: verifiedUser.email,
       first_name: verifiedUser.first_name,
       last_name: verifiedUser.last_name,
+      role: verifiedUser.role,
     });
 
     return {
