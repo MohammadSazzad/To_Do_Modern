@@ -57,6 +57,7 @@ export class AuthService {
     email: string;
     first_name: string;
     last_name: string;
+    role: string;
   }) {
     const tokens = await this.generateTokenPair(user.id, user.email);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
@@ -68,6 +69,7 @@ export class AuthService {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
+        role: user.role,
       },
     };
   }
@@ -93,6 +95,7 @@ export class AuthService {
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
+      role: user.role,
     });
 
     return {
@@ -120,6 +123,7 @@ export class AuthService {
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
+      role: user.role,
     });
 
     return {
