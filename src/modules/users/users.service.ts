@@ -33,7 +33,7 @@ export class UsersService {
         phone: createUserDto.phone,
         dob: createUserDto.dob,
         address: createUserDto.address,
-        role: 'user',
+        role: 'USER',
         verified: false,
         password: hashedPassword,
         otp: GenOtp,
@@ -89,5 +89,24 @@ export class UsersService {
       message: 'User verified successfully',
       ...authResult,
     };
+  }
+
+  async findAllUsers() {
+    const users = await this.prisma.users.findMany({
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone: true,
+        dob: true,
+        address: true,
+        role: true,
+        verified: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+    return users;
   }
 }
