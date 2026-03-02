@@ -14,6 +14,7 @@ import { VerifyUserDto } from './dto/verify-user.dto';
 import { RefreshCookieInterceptor } from 'src/modules/auth/interceptors/refresh-cookie.interceptor';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -34,8 +35,8 @@ export class UsersController {
   }
 
   @Get('/')
-  @UseGuards(RolesGuard)
-  @Roles('ADMIN')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @HttpCode(200)
   findAllUsers() {
     return this.usersService.findAllUsers();

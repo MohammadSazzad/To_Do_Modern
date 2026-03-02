@@ -16,7 +16,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  private async generateTokenPair(userId: string, email: string) {
+  private normalizeRole(role: string) {
+    return role.toLowerCase();
+  }
+
+  private async generateTokenPair(userId: string, email: string, role: string) {
     const accessSecret = process.env.ACCESS_TOKEN_SECRET;
     const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
     const accessExpiresIn = resolveJwtExpiresIn(
@@ -28,7 +32,7 @@ export class AuthService {
       '7d',
     );
 
-    const payload = { sub: userId, email };
+    const payload = { sub: userId, email, role: this.normalizeRole(role) };
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
@@ -59,7 +63,8 @@ export class AuthService {
     last_name: string;
     role: string;
   }) {
-    const tokens = await this.generateTokenPair(user.id, user.email);
+    const normalizedRole = this.normalizeRole(user.role);
+    const tokens = await this.generateTokenPair(user.id, user.email, user.role);
     await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     return {
@@ -69,7 +74,7 @@ export class AuthService {
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
-        role: user.role,
+        role: normalizedRole,
       },
     };
   }
