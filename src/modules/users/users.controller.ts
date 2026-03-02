@@ -6,6 +6,7 @@ import {
   ClassSerializerInterceptor,
   HttpCode,
   Get,
+  Patch,
   UseGuards,
   Req,
   Query,
@@ -18,6 +19,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { AuthenticatedRequest } from '../auth/type/auth.type';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -66,5 +68,22 @@ export class UsersController {
   @HttpCode(200)
   findUserByEmail(@Query('key') key: string) {
     return this.usersService.findUserByEmail(key);
+  }
+
+  @Patch('/update')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'user')
+  @HttpCode(200)
+  updateUser(
+    @Req() request: AuthenticatedRequest,
+    @Query('id') queryUserId: string | undefined,
+    @Body() updateData: UpdateUserDto,
+  ) {
+    return this.usersService.updateUser({
+      requesterId: request.user.sub,
+      requesterRole: request.user.role,
+      queryUserId,
+      updateData,
+    });
   }
 }

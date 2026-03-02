@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from 'src/config/database.config';
@@ -6,11 +10,19 @@ import { randomUUID } from 'crypto';
 import { MailService } from 'src/common/mail/mail.service';
 import { VerifyUserDto } from './dto/verify-user.dto';
 import { AuthService } from 'src/modules/auth/auth.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 type FindOneParams = {
   requesterId: string;
   requesterRole: string;
   queryUserId?: string;
+};
+
+type UpdateUserParams = {
+  requesterId: string;
+  requesterRole: string;
+  queryUserId?: string;
+  updateData: Partial<UpdateUserDto>;
 };
 
 @Injectable()
@@ -171,6 +183,71 @@ export class UsersService {
       refreshHash,
       ...userWithoutSensitiveInfo
     } = user || {};
+    return userWithoutSensitiveInfo;
+  }
+
+  async updateUser({
+    requesterId,
+    requesterRole,
+    queryUserId,
+    updateData,
+  }: UpdateUserParams) {
+    const normalizedRole = requesterRole.toLowerCase();
+
+    if (normalizedRole !== 'admin' && normalizedRole !== 'user') {
+      throw new BadRequestException('Invalid user role');
+    }
+
+    if (normalizedRole !== 'admin' && updateData.role !== undefined) {
+      throw new ForbiddenException('Only admin can update role');
+    }
+
+    if (normalizedRole === 'admin') {
+      if (!queryUserId) {
+        throw new BadRequestException(
+          'Query parameter id is required for admin',
+        );
+      }
+    }
+
+    if (
+      normalizedRole !== 'admin' &&
+      queryUserId !== undefined &&
+      queryUserId !== requesterId
+    ) {
+      throw new ForbiddenException('You can only update your own profile');
+    }
+
+    const targetUserId =
+      normalizedRole === 'admin' ? queryUserId! : requesterId;
+
+    const user = await this.prisma.users.findUnique({
+      where: { id: targetUserId },
+    });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+
+    const updatedUser = await this.prisma.users.update({
+      where: { id: targetUserId },
+      data: {
+        ...updateData,
+        updated_at: new Date(),
+      },
+    });
+
+    const {
+      password,
+      otp,
+      otpExpiry,
+      refreshHash,
+      ...userWithoutSensitiveInfo
+    } = updatedUser;
+
     return userWithoutSensitiveInfo;
   }
 }
