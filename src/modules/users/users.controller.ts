@@ -59,4 +59,12 @@ export class UsersController {
       queryUserId,
     });
   }
+
+  @Get('/email')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @HttpCode(200)
+  findUserByEmail(@Query('key') key: string) {
+    return this.usersService.findUserByEmail(key);
+  }
 }

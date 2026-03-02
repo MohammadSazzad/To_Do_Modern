@@ -109,6 +109,7 @@ export class UsersService {
         address: true,
         role: true,
         verified: true,
+        verified_at: true,
         created_at: true,
         updated_at: true,
       },
@@ -146,6 +147,7 @@ export class UsersService {
         address: true,
         role: true,
         verified: true,
+        verified_at: true,
         created_at: true,
         updated_at: true,
       },
@@ -156,5 +158,19 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  async findUserByEmail(email: string) {
+    const user = await this.prisma.users.findUnique({
+      where: { email },
+    });
+    const {
+      password,
+      otp,
+      otpExpiry,
+      refreshHash,
+      ...userWithoutSensitiveInfo
+    } = user || {};
+    return userWithoutSensitiveInfo;
   }
 }
