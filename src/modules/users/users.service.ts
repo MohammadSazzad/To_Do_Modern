@@ -7,6 +7,12 @@ import { MailService } from 'src/common/mail/mail.service';
 import { VerifyUserDto } from './dto/verify-user.dto';
 import { AuthService } from 'src/modules/auth/auth.service';
 
+type FindOneParams = {
+  requesterId: string;
+  requesterRole: string;
+  queryUserId?: string;
+};
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -108,5 +114,47 @@ export class UsersService {
       },
     });
     return users;
+  }
+
+  async findOne({ requesterId, requesterRole, queryUserId }: FindOneParams) {
+    const normalizedRole = requesterRole.toLowerCase();
+
+    let targetUserId = requesterId;
+
+    if (normalizedRole === 'admin') {
+      if (!queryUserId) {
+        throw new BadRequestException(
+          'Query parameter id is required for admin',
+        );
+      }
+      targetUserId = queryUserId;
+    }
+
+    if (normalizedRole !== 'admin' && normalizedRole !== 'user') {
+      throw new BadRequestException('Invalid user role');
+    }
+
+    const user = await this.prisma.users.findUnique({
+      where: { id: targetUserId },
+      select: {
+        id: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone: true,
+        dob: true,
+        address: true,
+        role: true,
+        verified: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    return user;
   }
 }

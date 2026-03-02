@@ -7,6 +7,8 @@ import {
   HttpCode,
   Get,
   UseGuards,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -15,6 +17,7 @@ import { RefreshCookieInterceptor } from 'src/modules/auth/interceptors/refresh-
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import type { AuthenticatedRequest } from '../auth/type/auth.type';
 
 @Controller('users')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -40,5 +43,20 @@ export class UsersController {
   @HttpCode(200)
   findAllUsers() {
     return this.usersService.findAllUsers();
+  }
+
+  @Get('/profile')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'user')
+  @HttpCode(200)
+  findUserById(
+    @Req() request: AuthenticatedRequest,
+    @Query('id') queryUserId?: string,
+  ) {
+    return this.usersService.findOne({
+      requesterId: request.user.sub,
+      requesterRole: request.user.role,
+      queryUserId,
+    });
   }
 }
