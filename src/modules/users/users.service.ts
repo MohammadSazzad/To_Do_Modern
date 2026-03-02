@@ -250,4 +250,48 @@ export class UsersService {
 
     return userWithoutSensitiveInfo;
   }
+
+  async deleteUser(key: string) {
+    const normalizedKey = key.trim();
+
+    if (!normalizedKey) {
+      throw new BadRequestException('Key is required');
+    }
+
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        normalizedKey,
+      );
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedKey);
+
+    let user: { id: string } | null = null;
+
+    if (isUuid) {
+      user = await this.prisma.users.findUnique({
+        where: { id: normalizedKey },
+      });
+    }
+
+    if (!user && isEmail) {
+      user = await this.prisma.users.findUnique({
+        where: { email: normalizedKey },
+      });
+    }
+
+    if (!user) {
+      user = await this.prisma.users.findUnique({
+        where: { phone: normalizedKey },
+      });
+    }
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    return await this.prisma.users.delete({
+      where: {
+        id: user.id,
+      },
+    });
+  }
 }

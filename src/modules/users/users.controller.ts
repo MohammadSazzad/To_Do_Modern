@@ -10,6 +10,8 @@ import {
   UseGuards,
   Req,
   Query,
+  Delete,
+  Param,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -85,5 +87,13 @@ export class UsersController {
       queryUserId,
       updateData,
     });
+  }
+
+  @Delete('/delete/:key')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @HttpCode(204)
+  deleteUser(@Param('key') key: string) {
+    return this.usersService.deleteUser(key);
   }
 }
