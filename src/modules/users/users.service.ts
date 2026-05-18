@@ -45,8 +45,8 @@ export class UsersService {
     const newUser = await this.prisma.users.create({
       data: {
         id: randomUUID(),
-        first_name: createUserDto.first_name!,
-        last_name: createUserDto.last_name!,
+        first_name: createUserDto.first_name,
+        last_name: createUserDto.last_name,
         email: createUserDto.email,
         phone: createUserDto.phone,
         dob: createUserDto.dob,

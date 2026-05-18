@@ -3,19 +3,19 @@ import { IsBoolean, IsOptional, IsString } from 'class-validator';
 export class VerifyUserDto {
   @IsOptional()
   @IsString()
-  email: string;
+  email!: string;
 
   @IsOptional()
   @IsString()
-  otp: string;
+  otp!: string;
 
   @IsOptional()
   @IsBoolean()
-  verified: boolean;
+  verified!: boolean;
 
   @IsOptional()
-  verified_at: Date;
+  verified_at!: Date;
 
   @IsOptional()
-  otpExpiry: Date;
+  otpExpiry!: Date;
 }

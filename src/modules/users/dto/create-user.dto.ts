@@ -2,19 +2,17 @@ import { IsEmail, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateUserDto {
-  @IsOptional()
   @IsString()
-  first_name?: string;
+  first_name!: string;
 
-  @IsOptional()
   @IsString()
-  last_name?: string;
+  last_name!: string;
 
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsString()
-  phone: string;
+  phone!: string;
 
   @Transform(({ value }) => {
     if (!value) return value;
@@ -26,13 +24,13 @@ export class CreateUserDto {
     return new Date(value);
   })
   @IsNotEmpty()
-  dob: Date;
+  dob!: Date;
 
   @IsString()
-  address: string;
+  address!: string;
 
   @IsString()
-  password: string;
+  password!: string;
 
   @IsString()
   @IsOptional()
